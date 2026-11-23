@@ -7,6 +7,9 @@ MESSAGES = {
     'NO_LICENSE':'当天无有效授权', 'OUTSIDE_ARTICLE':'申请超出文章页界', 'QUOTA':'额度不足',
     'UNKNOWN_TARGET':'撤销目标未裁决', 'REPEATED_CANCEL':'复本订单已撤销', 'WRONG_ORG':'撤销机构与原件不符',
     'RUN_UNKNOWN':'未找到许可批次', 'DRAFT_ONLY':'请先签发批次凭证', 'BOUNDARY':'跨年度复本不能撤销',
+    'RECORD_BAD':'寄送或回执登记格式无效', 'RECORD_COLLISION':'同一编号的登记内容前后不一致',
+    'UNSIGNED_PAGE':'寄送页超出实签页界', 'SEAL_INVALID':'签发凭证无法复验，不能登记寄送或回执',
+    'UNKNOWN_ENTRY':'回执订单不在签发凭证内',
 }
 
 

@@ -13,6 +13,7 @@
 | M5 签发请求对账 | 复算许可页与有效额度 | `GET/POST /api/balance` | `app/register/balance.py` | `tests/test_balance.py` |
 | M6 批次留档复跑 | 取回原归档快照 | `POST /api/volumes` | `app/vault/record.py` `app/vault/database.py` | `tests/test_vault.py` |
 | M7 许可证据签发 | 签发可复验凭证 | `POST /api/volumes/{id}/stamp` | `app/certificate/slip.py` | `tests/test_certificate.py` |
+| M8 寄送回执对账 | 分批寄出、登记迟到回执、看补寄页 | `GET/POST /api/volumes/{id}/dispatch`、`POST /api/volumes/{id}/receipt` | `app/dispatch/journal.py` | `tests/test_dispatch.py` |
 
 ## 陷阱登记
 
@@ -27,5 +28,12 @@
 | TRAP-19 | 专属和公开同日适用 | 高修订公开版覆盖专属 | 先比较授权范围 | `app/licenses/terms.py` | `tests/test_licenses.py::test_special_beats_public_high_revision` |
 | TRAP-23 | 请求在截止日 | 到期条款多算一天 | 左闭右开 | `app/licenses/terms.py` | `tests/test_licenses.py::test_closed_at_valid_until` |
 | TRAP-25 | 两版时间重叠 | 按列表顺序选版 | 高修订优先，同级冲突待证 | `app/licenses/decide.py` | `tests/test_licenses.py::test_overlapping_versions_and_tie` |
+| TRAP-28 | 迟到回执确认页早已收到 | 按整批补寄重发 | 回执逐页结清，只补未见回执的缺页 | `app/dispatch/journal.py` | `tests/test_dispatch.py::test_late_receipt_closes_pages_already_received` |
+| TRAP-29 | 借方只报缺两页 | 未结清页全算可补寄 | 在途页计等回执，补寄与等回执互斥 | `app/dispatch/journal.py` | `tests/test_dispatch.py::test_reported_short_pages_only_are_resent` |
+| TRAP-30 | 两人同时登记同一回执 | 同页算两份实收 | 写锁加主键，实收按页并集 | `app/dispatch/journal.py` | `tests/test_dispatch.py::test_concurrent_duplicate_receipt_settles_once` |
+| TRAP-31 | 回执重试 | 重复结清 | 同号同内容返回原记录不重算 | `app/dispatch/journal.py` | `tests/test_dispatch.py::test_retrying_same_receipt_keeps_ledger_unchanged` |
+| TRAP-32 | 回执页越出实签 | 越界页也结清或整张退回 | 越界页不入实收，留「待核查」 | `app/dispatch/journal.py` | `tests/test_dispatch.py::test_receipt_pages_beyond_signed_range_go_to_review` |
 
 58 申请页 = 32 许可页 + 18 拒绝页 + 8 待证页。C01 已许可 6 页，R01 归还 6 页，因此有效占用 26 页。申请页计在订单内部去重，各不同订单独立计数。
+
+签发凭证载 7 单共 26 实签页（C01 的 6 页因 R01 撤销不计）。寄送与回执在此 26 页上逐页对账：实签 = 实收 + 未结清，未结清 = 等回执 + 可补寄。

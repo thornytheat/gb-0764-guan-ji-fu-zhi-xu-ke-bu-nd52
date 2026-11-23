@@ -1,6 +1,8 @@
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, request
 
 from app.certificate.slip import certificate, stamp
+from app.dispatch.journal import file_dispatch, file_receipt, ledger
+from app.problem import DeskError
 from app.source import read_request
 from app.vault.record import deposit, index, volume
 from app.workflow import steps
@@ -56,6 +58,29 @@ def get_volume(run):
 @rights.post('/api/volumes/<run>/stamp')
 def issue(run):
     return stamp(current_app.vault,run)
+
+
+@rights.get('/api/volumes/<run>/dispatch')
+def dispatch_ledger(run):
+    return ledger(current_app.vault,run)
+
+
+def record(handler, run):
+    payload = request.get_json(silent=True)
+    if not isinstance(payload,dict):
+        raise DeskError('RECORD_BAD')
+    result = handler(current_app.vault,run,payload)
+    return result,200 if result['reused'] else 201
+
+
+@rights.post('/api/volumes/<run>/dispatch')
+def dispatch(run):
+    return record(file_dispatch,run)
+
+
+@rights.post('/api/volumes/<run>/receipt')
+def receipt(run):
+    return record(file_receipt,run)
 
 
 @rights.get('/api/volumes/<run>/export')

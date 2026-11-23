@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, render_template, request
 
+from app.dispatch.journal import ledger
 from app.problem import DeskError
 from app.settings import EDITION
 from app.source import bundle
@@ -19,5 +20,15 @@ def folio(view='balance'):
     sample = request.args.get('sample','dirty')
     data = steps(bundle(sample),view)
     volumes = index(current_app.vault) if view in ('volumes','stamp') else []
+    active = request.args.get('run')
+    shipment, shipment_error = None, None
+    if view == 'stamp' and active:
+        try:
+            shipment = ledger(current_app.vault,active)
+        except DeskError as exc:
+            if exc.code not in ('DRAFT_ONLY','RUN_UNKNOWN','SEAL_INVALID'):
+                raise
+            shipment_error = exc
     return render_template('base.html', view=view, sections=SECTIONS, data=data, sample=sample,
-                           volumes=volumes, active=request.args.get('run'), edition=EDITION)
+                           volumes=volumes, active=active, shipment=shipment, shipment_error=shipment_error,
+                           edition=EDITION)

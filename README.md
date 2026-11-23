@@ -4,6 +4,6 @@
 
 运行 `docker compose up --build` 后访问 `http://localhost:18463/`。本机安装 `requirements.txt` 后可用 `flask --app app.main:create_app run --port 18463` 启动。执行 `pytest -q` 验证。`LICENSE_DB` 指定 SQLite 路径，切换为空文件路径可建立新档案。
 
-从十一月混合来件检查材料采信、刊号机构、许可裁决、覆盖页段和请求勾稽。前五项 API 可用 GET 调样例或用 POST 的 `csv` 字段提交订单文本。进入批次页归卷，再用签发印版生成下载件。每次归卷复算整份来件，年度池占用保存在该次快照内。
+从十一月混合来件检查材料采信、刊号机构、许可裁决、覆盖页段和请求勾稽。前五项 API 可用 GET 调样例或用 POST 的 `csv` 字段提交订单文本。进入批次页归卷，再用签发印版生成下载件。签发后同页登记分批寄送与迟到回执，按实签页对账，标出可补寄、等回执和待核查的页。每次归卷复算整份来件，年度池占用保存在该次快照内。
 
 [字段与术语](docs/DATA-DICTIONARY.md) · [规则复核表](docs/DEPTH.md)

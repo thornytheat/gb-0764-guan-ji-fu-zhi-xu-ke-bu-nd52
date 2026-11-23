@@ -2,3 +2,31 @@
 {% if volumes %}<form id="stamp"><label for="volume">许可卷号</label><select id="volume">{% for item in volumes %}<option value="{{ item.run_id }}" {{ 'selected' if item.run_id==active }}>{{ item.run_id[:14] }} · {{ item.totals.effective }} 页</option>{% endfor %}</select><button>落印签发</button></form>
 <output id="imprint-value"></output><p><a id="certificate" hidden>下载许可凭证</a></p>{% else %}<p>请先复算归卷。</p>{% endif %}</article>
 <aside class="panel"><h3>签发联</h3><div class="imprint" id="paper-stamp">待盖印</div><button class="print" type="button" id="print-slip">打印本页</button></aside></div>
+
+{% if shipment %}{% set s = shipment.summary %}
+<section class="dispatch" data-run="{{ shipment.run_id }}">
+<h2>寄送与回执登记</h2>
+<p class="formula">{{ s.signed }} = {{ s.received }} + {{ s.outstanding }}</p>
+<p>实签页 = 已实收 + 未结清<sup><a href="#dispatch-basis">2</a></sup>。待回执 {{ s.awaiting }} 页 · 可补寄 {{ s.resend }} 页 · 待核查 {{ s.review }} 页。</p>
+<div class="folios"><article class="panel"><h3>逐页对账 · {{ s.orders }} 单</h3><div class="shelf"><table class="dispatch-table"><thead><tr><th>订单</th><th>实签</th><th>已寄</th><th>实收</th><th>未结清</th><th>等回执</th><th>可补寄</th><th>状态</th></tr></thead><tbody>
+{% for row in shipment.orders %}<tr><td>{{ row.entry }}</td><td>{{ row.text.signed }}</td><td>{{ row.text.dispatched }}</td><td>{{ row.text.received }}</td><td>{{ row.text.outstanding }}</td><td>{{ row.text.awaiting }}</td><td>{{ row.text.resend }}</td><td>{{ row.status }}</td></tr>{% else %}<tr><td colspan="8">签发凭证内没有可登记的许可页。</td></tr>{% endfor %}
+</tbody></table></div>
+<p><small>「等回执」为寄出日不早于最近回执日、尚未见实收的已寄页；「可补寄」为既不在途、也未见回执的缺页。两者互不重叠，交班只补「可补寄」列。</small></p></article>
+<aside class="panel" id="dispatch-basis"><h3>备注</h3><dl class="margin-notes"><dt>已寄批次</dt><dd>{{ s.batches }}</dd><dt>已收回执</dt><dd>{{ s.receipts }}</dd><dt>待核查页</dt><dd>{{ s.review }}</dd></dl>
+{% if shipment.review %}<h4>越界回执留查</h4>{% for item in shipment.review %}<details><summary>{{ item.receipt }} · {{ item.entry }} · {{ item.text }}</summary><small>{{ item.reason }} · {{ item.note }}</small></details>{% endfor %}{% endif %}</aside></div>
+
+<div class="folios"><article class="panel"><h3>登记寄送批次</h3>
+<form id="dispatch"><label for="batch-id">批次号</label><input id="batch-id" name="batch" maxlength="64" required>
+<label for="batch-day">寄出日</label><input id="batch-day" name="sent_on" type="date" required>
+<label for="batch-lines">页段（每行「订单,页段」）</label><textarea id="batch-lines" rows="4" placeholder="C02,8-12"></textarea>
+<button>登记寄送</button></form></article>
+<article class="panel"><h3>登记回执</h3>
+<form id="receipt"><label for="receipt-id">回执号</label><input id="receipt-id" name="receipt" maxlength="64" required>
+<label for="receipt-day">收到日</label><input id="receipt-day" name="received_on" type="date" required>
+<label for="receipt-lines">实收页段（每行「订单,页段」）</label><textarea id="receipt-lines" rows="4" placeholder="C02,8-12"></textarea>
+<button>登记回执</button></form></article></div>
+
+<h4>已登记</h4>
+<details><summary>寄送批次 {{ shipment.batches|length }}</summary>{% for item in shipment.batches %}<p>{{ item.batch }} · {{ item.sent_on }} · {{ item.pages }} 页</p>{% endfor %}</details>
+<details><summary>回执 {{ shipment.receipts|length }}</summary>{% for item in shipment.receipts %}<p>{{ item.receipt }} · {{ item.received_on }} · 实收 {{ item.accepted }} 页{% if item.outside %} · 越界 {{ item.outside }} 页{% endif %}</p>{% endfor %}</details>
+</section>{% elif shipment_error %}<p class="dispatch-status">{{ shipment_error }}</p>{% elif volumes %}<p class="dispatch-status">选妥卷号并落印签发后，即可在此登记分批寄送与迟到回执。</p>{% endif %}
